@@ -182,7 +182,7 @@ export default function AbonnementEmployeurPage() {
             </Text>
             
             <Text style={styles.confirmationModalSubtitle}>
-              Votre mission sera visible dès maintenant dans votre tableau de bord.
+              Votre mission sera visible dès maintenant dans l'accueil de votre application.
             </Text>
             
             <TouchableOpacity 
@@ -190,7 +190,7 @@ export default function AbonnementEmployeurPage() {
               onPress={handleAccessDashboard}
             >
               <Text style={styles.confirmationModalButtonText}>
-                Accéder au tableau de bord
+                Accéder à mon application
               </Text>
             </TouchableOpacity>
           </View>
