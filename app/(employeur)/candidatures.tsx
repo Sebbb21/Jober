@@ -9,9 +9,13 @@ import {
   ScrollView,
   Modal,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SearchBar, DefaultFilters } from '../../src/components';
 
 export default function CandidaturesPage() {
   const params = useLocalSearchParams();
@@ -23,7 +27,10 @@ export default function CandidaturesPage() {
   const [budgetMax, setBudgetMax] = useState('');
   const [selectedDelay, setSelectedDelay] = useState('');
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const modalScrollViewRef = useRef<ScrollView>(null);
+  const budgetInputRef = useRef<TextInput>(null);
 
   const handleBack = () => {
     router.push('/(employeur)/accueil');
@@ -61,6 +68,19 @@ export default function CandidaturesPage() {
   const handleAvailabilitySelect = (availability: string) => {
     setSelectedDelay(availability);
     setShowAvailabilityModal(false);
+  };
+
+  const handleBudgetFocus = () => {
+    setIsKeyboardOpen(true);
+    // Scroll automatique après un court délai pour laisser le temps au clavier de s'ouvrir
+    setTimeout(() => {
+      modalScrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 500);
+  };
+
+  const handleBudgetBlur = () => {
+    setIsKeyboardOpen(false);
+    Keyboard.dismiss();
   };
 
 
@@ -229,46 +249,19 @@ export default function CandidaturesPage() {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#9CA3AF" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Rechercher un freelance..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <TouchableOpacity style={styles.searchFilterButton} onPress={handleOpenFilters}>
-            <Ionicons name="options-outline" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
+        <SearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onFilterPress={handleOpenFilters}
+          placeholder="Rechercher un freelance..."
+        />
 
         {/* Filter Buttons */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.filtersContainer}
-        >
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter.id}
-              style={[
-                styles.filterButton,
-                activeFilter === filter.id && styles.filterButtonActive,
-              ]}
-              onPress={() => handleFilterChange(filter.id)}
-            >
-              <Text
-                style={[
-                  styles.filterButtonText,
-                  activeFilter === filter.id && styles.filterButtonTextActive,
-                ]}
-              >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <DefaultFilters
+          filters={filters}
+          activeFilter={activeFilter}
+          onFilterChange={handleFilterChange}
+        />
       </View>
 
       {/* Separator */}
@@ -281,7 +274,20 @@ export default function CandidaturesPage() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.candidaturesContainer}>
-          {getFilteredCandidatures().map((candidat) => (
+          {getFilteredCandidatures().length === 0 ? (
+            <View style={styles.emptyState}>
+              <Image 
+                source={require('../../assets/images/no-result.png')} 
+                style={styles.emptyStateImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.emptyStateTitle}>Aucun candidat trouvé</Text>
+              <Text style={styles.emptyStateText}>
+                Essayez de modifier vos critères de recherche ou vos filtres
+              </Text>
+            </View>
+          ) : (
+            getFilteredCandidatures().map((candidat) => (
             <View key={candidat.id} style={styles.candidatCard}>
               <View style={styles.candidatHeader}>
                 <View style={styles.avatarContainer}>
@@ -319,7 +325,8 @@ export default function CandidaturesPage() {
                 <Text style={styles.profilButtonText}>Voir le profil</Text>
               </TouchableOpacity>
             </View>
-          ))}
+            ))
+          )}
         </View>
       </ScrollView>
 
@@ -330,84 +337,100 @@ export default function CandidaturesPage() {
         animationType="fade"
         onRequestClose={handleCloseFilters}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1}
+          onPress={handleCloseFilters}
+        >
+          <TouchableOpacity 
+            style={[
+              styles.modalContent, 
+              (isKeyboardOpen || showAvailabilityModal) && styles.modalContentKeyboardOpen
+            ]} 
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
             {/* Header du modal */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filtres</Text>
-              <TouchableOpacity onPress={handleCloseFilters} style={styles.modalCloseButton}>
+              <Text style={styles.modalTitle}>Filtres avancés</Text>
+              <TouchableOpacity onPress={handleCloseFilters}>
                 <Ionicons name="close" size={24} color="#666666" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalSubtitle}>Affinez votre recherche de missions</Text>
 
-            {/* Section Notation */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Notation</Text>
-              <View style={styles.starsContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => handleRatingSelect(star)}
-                    style={styles.starButton}
-                  >
-                    <Ionicons
-                      name={star <= selectedRating ? "star" : "star-outline"}
-                      size={24}
-                      color={star <= selectedRating ? "#FFD700" : "#E5E7EB"}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Section Budget */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>TJM maximum (€)</Text>
-              <TextInput
-                style={styles.budgetInput}
-                placeholder="Ex: 1500"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                value={budgetMax}
-                onChangeText={setBudgetMax}
-                onBlur={() => Keyboard.dismiss()}
-                onSubmitEditing={() => Keyboard.dismiss()}
-                returnKeyType="done"
-              />
-            </View>
-
-            {/* Section Disponibilité */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Disponibilité</Text>
-              <TouchableOpacity
-                style={styles.availabilityDropdown}
-                onPress={() => setShowAvailabilityModal(!showAvailabilityModal)}
-              >
-                <Text style={[styles.availabilityDropdownText, !selectedDelay && styles.placeholderText]}>
-                  {selectedDelay || 'Sélectionner une disponibilité'}
-                </Text>
-                <Ionicons name="chevron-down" size={20} color="#999999" />
-              </TouchableOpacity>
-              
-              {/* Liste de disponibilité qui s'affiche directement */}
-              {showAvailabilityModal && (
-                <View style={styles.availabilityList}>
-                  {availabilityOptions.map((option, index) => (
+            {/* Body du modal */}
+            <ScrollView ref={modalScrollViewRef} style={styles.modalBody} keyboardShouldPersistTaps="handled">
+              {/* Section Notation */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Notation</Text>
+                <View style={styles.ratingSelector}>
+                  {[1, 2, 3, 4, 5].map((star) => (
                     <TouchableOpacity
-                      key={option}
-                      style={[styles.availabilityItem, index === availabilityOptions.length - 1 && styles.availabilityItemLast]}
-                      onPress={() => handleAvailabilitySelect(option)}
+                      key={star}
+                      onPress={() => handleRatingSelect(star)}
+                      style={styles.starButton}
                     >
-                      <Text style={styles.availabilityItemText}>{option}</Text>
+                      <Ionicons
+                        name={star <= selectedRating ? "star" : "star-outline"}
+                        size={32}
+                        color="#8B5CF6"
+                      />
                     </TouchableOpacity>
                   ))}
                 </View>
-              )}
-            </View>
+              </View>
 
-            {/* Boutons d'action */}
-            <View style={styles.modalActions}>
+              {/* Section Budget */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>TJM maximum</Text>
+                <TextInput
+                  ref={budgetInputRef}
+                  style={styles.budgetInput}
+                  placeholder="Ex: 1500"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="numeric"
+                  value={budgetMax}
+                  onChangeText={setBudgetMax}
+                  onFocus={handleBudgetFocus}
+                  onBlur={handleBudgetBlur}
+                  onSubmitEditing={handleBudgetBlur}
+                  returnKeyType="done"
+                  blurOnSubmit={true}
+                />
+              </View>
+
+              {/* Section Disponibilité */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Disponibilité</Text>
+                <TouchableOpacity
+                  style={styles.availabilityDropdown}
+                  onPress={() => setShowAvailabilityModal(!showAvailabilityModal)}
+                >
+                  <Text style={[styles.availabilityDropdownText, !selectedDelay && styles.placeholderText]}>
+                    {selectedDelay || 'Sélectionner une Disponibilité'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#999999" />
+                </TouchableOpacity>
+                
+                {/* Liste de disponibilité qui s'affiche directement */}
+                {showAvailabilityModal && (
+                  <View style={styles.availabilityList}>
+                    {availabilityOptions.map((option, index) => (
+                      <TouchableOpacity
+                        key={option}
+                        style={[styles.availabilityItem, index === availabilityOptions.length - 1 && styles.availabilityItemLast]}
+                        onPress={() => handleAvailabilitySelect(option)}
+                      >
+                        <Text style={styles.availabilityItemText}>{option}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+
+            {/* Footer du modal */}
+            <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.resetButton} onPress={handleResetFilters}>
                 <Text style={styles.resetButtonText}>Réinitialiser</Text>
               </TouchableOpacity>
@@ -415,8 +438,8 @@ export default function CandidaturesPage() {
                 <Text style={styles.applyButtonText}>Appliquer</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
 
@@ -455,51 +478,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 16,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#111827',
-    marginLeft: 8,
-  },
-  searchFilterButton: {
-    padding: 4,
-  },
-  filtersContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginRight: 4,
-  },
-  filterButtonActive: {
-    backgroundColor: '#8B5CF6',
-    borderColor: '#8B5CF6',
-  },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  filterButtonTextActive: {
-    color: '#FFFFFF',
-  },
   separator: {
     height: 1,
     backgroundColor: '#E5E7EB',
@@ -511,6 +489,29 @@ const styles = StyleSheet.create({
   candidaturesContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 0,
+    paddingHorizontal: 40,
+  },
+  emptyStateImage: {
+    width: 350,
+    height: 350,
+    marginBottom: 10,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   candidatCard: {
     backgroundColor: '#FFFFFF',
@@ -612,40 +613,30 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    width: '100%',
-    maxWidth: 400,
-    padding: 24,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '54%',
+  },
+  modalContentKeyboardOpen: {
+    height: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#111827',
-  },
-  modalCloseButton: {
-    padding: 4,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 24,
   },
   filterSection: {
     marginBottom: 24,
@@ -656,8 +647,15 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 12,
   },
-  starsContainer: {
+  filterSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  ratingSelector: {
     flexDirection: 'row',
+    justifyContent: 'center',
     gap: 8,
   },
   starButton: {
@@ -727,10 +725,17 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#9CA3AF',
   },
-  modalActions: {
+  modalBody: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  modalFooter: {
     flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
     gap: 12,
-    marginTop: 8,
   },
   resetButton: {
     flex: 1,
@@ -815,10 +820,10 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   budgetInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
@@ -856,10 +861,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },

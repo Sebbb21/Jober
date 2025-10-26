@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { StatsCard, PageHeader } from '../../src/components';
 
 export default function EmployeurAccueilPage() {
   const [activeFilter, setActiveFilter] = useState('toutes');
@@ -76,33 +77,22 @@ export default function EmployeurAccueilPage() {
     return mission.status === activeFilter;
   });
 
-  const renderIcon = (iconName: string, iconType: string, size: number, color: string) => {
-    if (iconType === 'Ionicons') {
-      return <Ionicons name={iconName as any} size={size} color={color} />;
-    } else if (iconType === 'MaterialIcons') {
-      return <MaterialIcons name={iconName as any} size={size} color={color} />;
-    }
-    return null;
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Accueil</Text>
-      </View>
+      <PageHeader title="Accueil" />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
           {statsCards.map((card) => (
-            <View key={card.id} style={styles.statCard}>
-              <View style={styles.statIcon}>
-                {renderIcon(card.icon, card.iconType, 24, '#8B5CF6')}
-              </View>
-              <Text style={styles.statNumber}>{card.number}</Text>
-              <Text style={styles.statLabel}>{card.label}</Text>
-            </View>
+            <StatsCard
+              key={card.id}
+              icon={card.icon}
+              iconType={card.iconType as 'Ionicons' | 'MaterialIcons'}
+              number={card.number}
+              label={card.label}
+            />
           ))}
         </View>
 
@@ -210,17 +200,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
   scrollView: {
     flex: 1,
   },
@@ -229,29 +208,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  statIcon: {
-    marginBottom: 8,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
   },
   newMissionButton: {
     backgroundColor: '#8B5CF6',
