@@ -12,6 +12,7 @@ export default function AuthLayout() {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="register" options={{ title: 'Inscription' }} />
       <Stack.Screen name="abonnement-employeur" options={{ headerShown: false }} />
+      <Stack.Screen name="abonnement-freelance" options={{ headerShown: false }} />
     </Stack>
   );
 }

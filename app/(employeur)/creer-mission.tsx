@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ProgressBar } from '../src/components';
+import { ProgressBar } from '../../src/components';
 
 export default function CreerMissionPage() {
   const [formData, setFormData] = useState({
@@ -472,7 +472,7 @@ export default function CreerMissionPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -766,3 +766,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+

@@ -50,6 +50,7 @@ export default function EmployeurLayout() {
             <Stack.Screen name="dashboard" options={{ headerShown: false }} />
             <Stack.Screen name="messages" options={{ headerShown: false }} />
             <Stack.Screen name="compte" options={{ headerShown: false }} />
+            <Stack.Screen name="creer-mission" options={{ headerShown: false }} />
             <Stack.Screen name="nouvelle-mission" options={{ headerShown: false }} />
             <Stack.Screen name="candidatures" options={{ headerShown: false }} />
             <Stack.Screen name="profil-freelance" options={{ headerShown: false }} />

@@ -13,11 +13,11 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function StatusChoicePage() {
   const handleEmployerPress = () => {
-    router.push('/creer-mission?from=hiring');
+    router.push('/(employeur)/creer-mission?from=hiring');
   };
 
   const handleFreelancePress = () => {
-    router.push('/(auth)/register');
+    router.push('/(freelance)/creer-profil');
   };
 
   const handleLoginPress = () => {

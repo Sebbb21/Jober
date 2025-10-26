@@ -19,9 +19,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  // Vérifier si on vient de la page status-choice ou du modal de publication
+  // Vérifier si on vient de la page status-choice ou du modal de publication/profil
   const params = useLocalSearchParams();
-  const showBackButton = params.from === 'status-choice' || params.from === 'publish-modal';
+  const showBackButton = params.from === 'status-choice' || params.from === 'publish-modal' || params.from === 'profile-modal';
 
   const handleLogin = () => {
     // Redirection vers l'accueil employeur après connexion
@@ -33,7 +33,11 @@ export default function LoginPage() {
   };
 
   const handleBack = () => {
-    router.back();
+    if (params.from === 'profile-modal') {
+      router.push('/(freelance)/creer-profil');
+    } else {
+      router.back();
+    }
   };
 
   return (

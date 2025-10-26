@@ -5,6 +5,7 @@ interface TopItem {
   rank: number;
   name: string;
   specialty?: string;
+  missions?: string;
   totalPaid?: string;
 }
 
@@ -31,6 +32,7 @@ export default function TopClientsFreelances({
           <View style={styles.itemInfo}>
             <Text style={styles.itemName}>{item.name}</Text>
             {item.specialty && <Text style={styles.itemSpecialty}>{item.specialty}</Text>}
+            {item.missions && <Text style={styles.itemMissions}>{item.missions}</Text>}
           </View>
           {item.totalPaid && <Text style={styles.totalPaid}>{item.totalPaid}</Text>}
         </View>
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F3F0FF',
+    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8B5CF6',
+    color: '#FFFFFF',
   },
   itemInfo: {
     flex: 1,
@@ -90,6 +92,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   itemSpecialty: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  itemMissions: {
     fontSize: 14,
     color: '#6B7280',
   },
